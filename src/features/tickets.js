@@ -1,44 +1,13 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 
+import { sendRequest } from '../_utils';
+
 
 export const fetchTickets = createAsyncThunk(
 	'fetchTickets',
 	async (_, { dispatch, getState, signal }) => {
 		dispatch(clear()); // erase existing data
 		if (!getState().filters.checkedList.length) return; // return as there are no filtering criteria
-
-		class RequestError extends Error {
-			constructor(message) {
-				super(message);
-				this.name = 'RequestError';
-			}
-		}
-		class AttemptsExceededError extends Error {
-			constructor(message) {
-				super(message);
-				this.name = 'AttemptsExceededError';
-			}
-		}
-
-		async function sendRequest(request, params = {}, attempts = 1) { // : Object<JSON>
-			try {
-				const response = await fetch(request, params);
-				console.warn(
-					`Requesting %s\nattempts left: %i | ${response.ok && 'content length: %s bytes' || 'failed'}`,
-					request, attempts, response.headers.get('Content-Length') || ''
-				);
-				if (!response.ok)
-					throw new RequestError(`Couldn’t fetch ${response.url} (status ${response.status})`);
-				if (attempts == 0)
-					throw new AttemptsExceededError('Attempts limit exceeded');
-				return await response.json();
-			} catch (e) {
-				if (e instanceof RequestError)
-					return sendRequest(request, params, attempts - 1); // let’s try again
-				else
-					throw e;
-			}
-		}
 
 		let sId = await sendRequest('https://aviasales-test-api.kata.academy/search', { signal });
 		let stop = false;
@@ -75,18 +44,23 @@ export const ticketsSlice = createSlice({
 		},
 		sort: (state, action) => {
 			state.value = state.value.sort((a, b) => {
+				let f1 = 0, f2 = 0;
 				switch (action.payload) {
+					case 'optimal':
+						/* falls through */
 					case 'cheap':
-						return a.price - b.price;
+						f1 = a.price - b.price;
+						if (action.payload != 'optimal') break;
+						/* falls through */
 					case 'fast': {
-						let r = 0;
 						for (let i = 0; i < a.segments.length; i++)
-							r += a.segments[i].duration - b.segments[i].duration;
-						return r;
+							f2 += a.segments[i].duration - b.segments[i].duration;
+						break;
 					}
 					default:
 						throw new Error('Invalid sort criterion');
 				}
+				return f1 + f2;
 			});
 		},
 		clear: (state) => {

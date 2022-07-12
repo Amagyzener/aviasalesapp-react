@@ -3,7 +3,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import sortingReducer from './features/sorting';
 import filtersReducer from './features/filters';
 import ticketsReducer from './features/tickets';
-import ticketsMiddleware from './middleware/ticketsMiddleware'
+import ticketsMiddleware from './middleware/ticketsMiddleware';
 
 
 export default configureStore({

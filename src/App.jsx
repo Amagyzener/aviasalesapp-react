@@ -124,7 +124,7 @@ function App() {
 					<Radio.Group value={sorting_criterion} buttonStyle='solid' style={{ marginBottom: 20, width: '100%' }} onChange={sortingOnChange}>
 						<Radio.Button value='cheap'>Самый дешёвый</Radio.Button>
 						<Radio.Button value='fast'>Самый быстрый</Radio.Button>
-						{/* <Radio.Button value='optimal'>Оптимальный</Radio.Button> */}
+						<Radio.Button value='optimal'>Оптимальный</Radio.Button>
 					</Radio.Group>
 					{tickets_loading && spinner || null}
 					{!tickets_loading && tickets_error && msg_error || null}

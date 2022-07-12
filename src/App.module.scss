@@ -100,7 +100,7 @@ body {
 
 :global .ant-radio-button-wrapper {
 	height: auto;
-	width: (100% / 2);
+	width: (100% / 3);
 	padding: 8px 20px;
 	border-color: $button-border-color;
 	text-align: center;
@@ -171,13 +171,15 @@ body {
 :global .internet-error {
 	position: fixed;
 	top: 0; right: 0; left: 0;
+	z-index: 10;
 	background: #bb4131;
 	text-align: center;
-}
-:global .internet-error p {
-	margin: 0;
-	line-height: 2em;
-	font-size: 18px;
-	text-transform: uppercase;
-	color: rgb(235, 235, 235);
+
+	p {
+		margin: 0;
+		line-height: 2em;
+		font-size: 18px;
+		text-transform: uppercase;
+		color: rgb(235, 235, 235);
+	}
 }
