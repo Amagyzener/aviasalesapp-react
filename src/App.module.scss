@@ -1,0 +1,183 @@
+@use './_variables' as *;
+
+html {
+	font: 12px/1em 'Open Sans', sans-serif;
+	font-weight: 600;
+}
+
+body {
+	background: $page-background;
+	font-size: inherit;
+	color: $text-color;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+
+.logo {
+	margin-bottom: 35px;
+	text-align: center;
+}
+
+.main {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+	margin: 35px auto 0;
+	padding: 0 12px;
+	max-width: 800px;
+
+	@media (min-width: $screen-tablet) {
+		flex-direction: row;
+		margin: 35px auto 50px;
+		padding: 0 24px;
+	}
+
+	&__filters {
+		height: fit-content;
+		padding: 20px;
+		background-color: $block-background;
+		border-radius: 5px;
+		box-shadow: $block-shadow;
+
+		@media (min-width: $screen-tablet) {
+			width: 30%;
+		}
+	}
+
+	&__body {
+		@media (min-width: $screen-tablet) {
+			width: 70%;
+		}
+	}
+}
+
+.block-caption {
+	margin-bottom: 20px;
+	text-transform: uppercase;
+}
+
+
+	/* AntD styling */
+:global .ant-checkbox-group {
+	display: flex;
+	flex-direction: column;
+}
+
+:global .ant-checkbox-wrapper {
+	display: flex;
+	margin: 0 -20px !important;
+	padding: 10px 20px;
+
+	&:hover {
+		background-color: $check-hover;
+	}
+
+	& .ant-checkbox-inner {
+		border-color: $check-border-color;
+	}
+
+	& > span:not([class]) {
+		padding: 0 10px;
+		line-height: 20px;
+		font-weight: 400;
+		font-size: 1.1rem;
+	}
+}
+
+:global .ant-checkbox-checked .ant-checkbox-inner {
+	background-color: transparent;
+	border-color: $theme-color;
+
+	&::after {
+		border-color: $theme-color;
+	}
+}
+
+:global .ant-radio-group {
+	width: 100%;
+}
+
+:global .ant-radio-button-wrapper {
+	height: auto;
+	width: (100% / 2);
+	padding: 8px 20px;
+	border-color: $button-border-color;
+	text-align: center;
+	color: $text-color;
+
+	&:hover {
+		color: $theme-color;
+	}
+
+	&:not(:first-child)::before {
+		background-color: unset;
+	}
+
+	&:first-child {
+		border: {
+			top-left-radius: 6px;
+			bottom-left-radius: 6px;
+			color: $button-border-color;
+		};
+	}
+
+	&:last-child {
+		border: {
+			top-right-radius: 6px;
+			bottom-right-radius: 6px;
+		};
+	}
+
+	& > span:not([class]) {
+		font-size: 12px;
+		font-weight: 600;
+		line-height: 1.65em;
+		text-transform: uppercase;
+	}
+}
+
+:global .ant-radio-group-solid .ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled) {
+	background: $theme-color;
+	border-color: $theme-color;
+}
+
+:global .ant-empty {
+	font-weight: 400;
+	color: $text-color;
+}
+
+:global .ant-result {
+	padding: 24px;
+
+	&-icon {
+		margin-bottom: 12px;
+	}
+
+	&-extra {
+		margin-top: 12px;
+		text-transform: uppercase;
+	}
+}
+
+	/* of utility use */
+:global .centering-container {
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	align-items: center;
+}
+
+:global .internet-error {
+	position: fixed;
+	top: 0; right: 0; left: 0;
+	background: #bb4131;
+	text-align: center;
+}
+:global .internet-error p {
+	margin: 0;
+	line-height: 2em;
+	font-size: 18px;
+	text-transform: uppercase;
+	color: rgb(235, 235, 235);
+}

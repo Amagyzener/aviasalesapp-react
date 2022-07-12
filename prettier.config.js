@@ -8,6 +8,6 @@ module.exports = {
 	tabWidth: 3,
 	useTabs: true,
 	semi: true,
-	arrowParens: 'avoid',
+	arrowParens: 'always',
 	endOfLine: 'crlf'
 };

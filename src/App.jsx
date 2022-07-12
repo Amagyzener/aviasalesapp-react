@@ -1,186 +1,138 @@
-import React, { Component } from 'react';
-import { Tabs, Input, Row, Col, Pagination, Spin, Alert, Empty } from 'antd';
-import { LoadingOutlined } from '@ant-design/icons';
-const { TabPane } = Tabs;
+import React, { useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { Checkbox, Radio, Spin, Empty, Result } from 'antd';
 
-import MovieDB_API from './MovieDB_API';
-import { MovieDB_Provider } from './MovieDB_context';
-import MovieCard from './components/MovieCard';
+import { fetchTickets, sort } from './features/tickets';
+import * as filters_actions from './features/filters';
+import { defaultSelected } from './features/filters';
+import * as sorting_actions from './features/sorting';
 import NetworkDetector from './hoc/NetworkDetector';
-import _debounce from './_debounce';
-
+import Ticket from './components/Ticket';
 import 'antd/dist/antd.css';
-import './App.css';
+import css from './App.module.scss';
 
 
-class App extends Component {
-	constructor(props) {
-		super(props);
-		this.state = {
-			items: [],
-			loading: true,
-			exception: null,
-			searchQuery: '',
-			currentPage: 1,
-			totalPages: 10,
-			activeTab: '1'
-		};
-	}
+// (global) a Promise object created on 'fetchTickets()' dispatch (it is needed to interrupt ongoing requests)
+let promise; // Promise { <pending|fulfilled|rejected>: {…}, arg, requestId, abort(), unwrap() }
 
-	handleInputChange = (e) => {
-		const query = e.target.value;
-		if (!query.length || this.state.activeTab != '1') return;
-		this.setState({ loading: true, searchQuery: query, currentPage: 1 });
-		this.updateDB(1, query);
-		console.log('handleInputChange: loading movies…');
-	}
+function App() {
+	const filters_render = [
+		{ label: 'Без пересадок', value: 0 },
+		{ label: '1 пересадка', value: 1 },
+		{ label: '2 пересадки', value: 2 },
+		{ label: '3 пересадки', value: 3 },
+	];
+	const filters_all = Array.from(filters_render, (x) => x.value);
+	//const defaultSelected = ['wo', 'w1', 'w2', 'w3'];
 
-	handlePageChange = (page) => {
-		this.setState({ loading: true, currentPage: page });
-		if (this.state.activeTab == '1')
-			this.updateDB(page);
-		else
-			this.showRated(page);
-		console.log('handlePageChange: loading movies…');
-	}
+	const dispatch = useDispatch();
+	const filters_checked = useSelector((state) => state.filters.checkedList);
+	const filters_indeterminate = useSelector((state) => state.filters.indeterminate);
+	const filters_checkAll = useSelector((state) => state.filters.checkAll);
+	/* const [checkedList, setCheckedList] = useState(defaultSelected);
+	const [indeterminate, setIndeterminate] = useState(false);
+	const [checkAll, setCheckAll] = useState(true); */
+	const sorting_criterion = useSelector((state) => state.sorting.criterion);
+	const tickets = useSelector((state) => state.tickets.value);
+	const tickets_loading = useSelector((state) => state.tickets.loading);
+	const tickets_error = useSelector((state) => state.tickets.error);
 
-	handleTabChange = (activeTabKey) => {
-		this.setState({ loading: true, currentPage: 1, activeTab: activeTabKey });
-		if (activeTabKey == '1')
-			this.updateDB();
-		else
-			this.showRated();
-	}
+	/* UI init */
+	const tickets_render = tickets.slice(0, 10).map((ticket, index) => {
+		const { carrier, price } = ticket;
+		const [from, to] = [ticket.segments[0], ticket.segments[1]];
 
-	updateDB(page = 1, query) {
-		MovieDB_API.getMovies(8, query || this.state.searchQuery || 'return', page)
-			.then(([items, pages]) => {
-				this.setState({ items, loading: false, totalPages: pages, exception: null });
-			})
-			.catch(e => {
-				this.setState({ loading: false, exception: e });
-			});
-	}
+		return <Ticket key={`t${index + 1}`} data={{ carrier, price, from, to }} />;
+	});
 
-	showRated(page = 1) {
-		const rated = []; // number[]: movie ids
-		for (let i = 0; i < localStorage.length; i++) rated.push(+localStorage.key(i));
+	const msg_empty = (
+		<Empty
+			image={Empty.PRESENTED_IMAGE_DEFAULT}
+			imageStyle={{ height: 100 }}
+			description={<span>Рейсов, подходящих под заданные фильтры, не найдено.</span>}
+		/>
+	);
 
-		MovieDB_API.findByIds(rated, page)
-			.then(([items, pages]) => {
-				if (this.state.activeTab == '2')
-					this.setState({ items, loading: false, totalPages: pages, exception: null });
-			})
-			.catch(e => {
-				this.setState({ loading: false, exception: e });
-			});
-	}
+	const msg_error = (
+		<Result
+			status='error'
+			title='Ошибка операции'
+			subTitle='Проверьте интернет-соединение и попробуйте снова.'
+			extra={tickets_error}
+		/>
+	);
 
-	render() {
-		console.log('render');
+	const spinner = (
+		<div className='centering-container' style={{ marginBottom: '15px' }}>
+			<Spin size='large' />
+		</div>
+	);
 
-		const cards = [], items = this.state.items;
-		for (let i = 0, k = 1; i < items.length; i += 2, k++) {
-			cards.push(
-				<Row gutter={[32, 32]} justify={'center'} align={'middle'} key={k}>
-					<Col span={12}>
-						<MovieDB_Provider>
-							<MovieCard
-								id={items[i].id}
-								poster_path={items[i].poster_path}
-								genre_ids={items[i].genre_ids}
-								release_date={items[i].release_date ?? ''}
-								title={items[i].title}
-								overview={items[i].overview}
-								vote_average={items[i].vote_average}
-							/>
-						</MovieDB_Provider>
-					</Col>
-					<Col span={12}>
-						{items[i + 1] ?
-							<MovieDB_Provider>
-								<MovieCard
-									id={items[i + 1].id}
-									poster_path={items[i + 1].poster_path}
-									genre_ids={items[i + 1].genre_ids}
-									release_date={items[i + 1].release_date ?? ''}
-									title={items[i + 1].title}
-									overview={items[i + 1].overview}
-									vote_average={items[i + 1].vote_average}
-								/>
-							</MovieDB_Provider>
-						: null}
-					</Col>
-				</Row>
-			);
-		}
+	/* Handlers */
+	const filtersOnCheck = (list) => {
+		dispatch(filters_actions.setCheckedList(list));
+		dispatch(filters_actions.setIndeterminate(list.length && list.length < filters_all.length));
+		dispatch(filters_actions.setCheckAll(list.length === filters_all.length));
+		/* setCheckedList(list);
+		setIndeterminate(list.length && list.length < defaultSelected.length);
+		setCheckAll(list.length === defaultSelected.length); */
+	};
 
-		const { loading, exception } = this.state;
-		const spinner = (
-			<div className='centering-container'>
-				<Spin indicator={<LoadingOutlined spin />} size='large' />
+	const filtersOnCheckAll = (e) => {
+		dispatch(filters_actions.setCheckedList(e.target.checked ? filters_all : []));
+		dispatch(filters_actions.setIndeterminate(false));
+		dispatch(filters_actions.setCheckAll(e.target.checked));
+		/* setCheckedList(e.target.checked ? defaultSelected : []);
+		setIndeterminate(false);
+		setCheckAll(e.target.checked); */
+	};
+
+	const sortingOnChange = (e) => {
+		dispatch(sorting_actions.setCriterion(e.target.value));
+	};
+
+	// fetch on start-up (didMount)
+	useEffect(() => {
+		filtersOnCheck(defaultSelected);
+	}, []);
+
+	// fetch on update #1 (didUpdate)
+	useEffect(() => {
+		if (promise) promise.abort('Filters change'); // abort the current fetching loop
+		promise = dispatch(fetchTickets()); // store a Promise object to be able to interrupt requests
+	}, [filters_checked]);
+
+	// fetch on update #2 (didUpdate)
+	useEffect(() => {
+		dispatch(sort(sorting_criterion));
+	}, [sorting_criterion]);
+
+	return (
+		<>
+			<div className={css.logo}>
+				<img src='/logo.png' />
 			</div>
-		);
-		const errorMsg = (
-			<Alert
-				message='Error'
-				description={exception?.message ?? ''}
-				type='error'
-				showIcon
-			/>
-		);
-		const emptyMsg = (
-			<Empty
-				image={Empty.PRESENTED_IMAGE_SIMPLE}
-				imageStyle={{ height: 65 }}
-				description={<span>No movies found :&#40;</span>}
-			/>
-		);
-
-		const body = (
-			<div className='moviedb__wrapper'>
-				{loading && spinner || null}
-				{!(loading || exception) && cards || null}
-				{exception && errorMsg}
-				{!items.length && !loading && emptyMsg}
-			</div>
-		);
-		const pagination = (
-			<div className='centering-container'>
-				<Pagination
-					size='small'
-					total={this.state.totalPages}
-					showSizeChanger={false}
-					onChange={this.handlePageChange}
-					current={this.state.currentPage}
-				/>
-			</div>
-		);
-
-		return (
-			<section className='moviedb'>
-				<Tabs defaultActiveKey='1' centered tabBarStyle={{ border: 'none', outline: 'none' }} onChange={this.handleTabChange}>
-					<TabPane tab='Search' key='1'>
-						<Input
-							placeholder='Type to search'
-							onChange={_debounce(this.handleInputChange, 2000)}
-						/>
-						{body}
-						{pagination}
-					</TabPane>
-					<TabPane tab='Rated' key='2'>
-						{body}
-						{pagination}
-					</TabPane>
-				</Tabs>
+			<section className={css.main}>
+				<aside className={css.main__filters}>
+					<div className={css['block-caption']}>Количество пересадок</div>
+					<Checkbox indeterminate={filters_indeterminate} onChange={filtersOnCheckAll} checked={filters_checkAll}>
+						Все
+					</Checkbox>
+					<Checkbox.Group options={filters_render} value={filters_checked} onChange={filtersOnCheck} />
+				</aside>
+				<div className={css.main__body}>
+					<Radio.Group value={sorting_criterion} buttonStyle='solid' style={{ marginBottom: 20, width: '100%' }} onChange={sortingOnChange}>
+						<Radio.Button value='cheap'>Самый дешёвый</Radio.Button>
+						<Radio.Button value='fast'>Самый быстрый</Radio.Button>
+						{/* <Radio.Button value='optimal'>Оптимальный</Radio.Button> */}
+					</Radio.Group>
+					{tickets_loading && spinner || null}
+					{!tickets_loading && tickets_error && msg_error || null}
+					{tickets_render.length && tickets_render || !tickets_loading && !tickets_error && msg_empty}
+				</div>
 			</section>
-		);
-	}
-
-	componentDidMount() {
-		this.updateDB();
-	}
+		</>
+	);
 }
 
-//App.contextType = MovieDB_context;
 export default NetworkDetector(App);

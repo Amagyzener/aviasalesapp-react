@@ -1,0 +1,44 @@
+@use '../_variables' as *;
+
+.main__ticket {
+	padding: 20px;
+	background-color: $block-background;
+	border-radius: 5px;
+	box-shadow: $block-shadow;
+
+	&:not(:last-child) {
+		margin-bottom: 20px;
+	}
+
+	&-cap {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 20px;
+
+		span {
+			font-size: 2em;
+			color: $theme-color;
+		}
+
+		/* img {} */
+	}
+
+	&-info {
+		display: flex;
+		flex-direction: column;
+
+		& > span {
+			line-height: 1.5em;
+		}
+
+		& > span:first-child {
+			text-transform: uppercase;
+			color: $text-faded-color;
+		}
+
+		& > span:last-child {
+			font-size: 1.15rem;
+		}
+	}
+}
