@@ -91,7 +91,7 @@ function App() {
 		dispatch(sorting_actions.setCriterion(e.target.value));
 	};
 
-	// fetch on start-up (didMount)
+	// start-up (didMount)
 	useEffect(() => {
 		filtersOnCheck(defaultSelected);
 	}, []);
@@ -100,7 +100,7 @@ function App() {
 	useEffect(() => {
 		if (promise) promise.abort('Filters change'); // abort the current fetching loop
 		promise = dispatch(fetchTickets()); // store a Promise object to be able to interrupt requests
-	}, [filters_checked]);
+	}, [filters_checked, sorting_criterion]);
 
 	// fetch on update #2 (didUpdate)
 	useEffect(() => {
@@ -121,7 +121,7 @@ function App() {
 					<Checkbox.Group options={filters_render} value={filters_checked} onChange={filtersOnCheck} />
 				</aside>
 				<div className={css.main__body}>
-					<Radio.Group value={sorting_criterion} buttonStyle='solid' style={{ marginBottom: 20, width: '100%' }} onChange={sortingOnChange}>
+					<Radio.Group value={sorting_criterion} buttonStyle='solid' onChange={sortingOnChange}>
 						<Radio.Button value='cheap'>Самый дешёвый</Radio.Button>
 						<Radio.Button value='fast'>Самый быстрый</Radio.Button>
 						<Radio.Button value='optimal'>Оптимальный</Radio.Button>

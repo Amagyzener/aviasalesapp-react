@@ -95,16 +95,29 @@ body {
 }
 
 :global .ant-radio-group {
+	display: flex;
+	align-items: stretch;
+	margin-bottom: 20px;
 	width: 100%;
 }
 
 :global .ant-radio-button-wrapper {
+	display: inline-flex;
+	justify-content: center;
+	align-items: center;
 	height: auto;
 	width: (100% / 3);
-	padding: 8px 20px;
+	padding: 8px 5px;
 	border-color: $button-border-color;
 	text-align: center;
+	font-size: smaller;
+	word-break: break-word;
 	color: $text-color;
+
+	@media (min-width: $screen-tablet) {
+		padding: 12px 20px;
+		font-size: 1rem;
+	}
 
 	&:hover {
 		color: $theme-color;
